@@ -266,6 +266,7 @@ function ChatContent() {
         </div>
       }
       defaultSidebarOpen={false}
+      hasMessages={messages.length > 0}
     />
   );
 }

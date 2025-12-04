@@ -27,6 +27,9 @@ export type AppLayoutProps = ComponentProps<"div"> & {
   canvas?: ReactNode;
   showSidebar?: boolean;
   defaultSidebarOpen?: boolean;
+  hasMessages?: boolean;
+  emptyStateTitle?: string;
+  emptyStateDescription?: string;
 };
 
 export const AppLayout = ({
@@ -39,12 +42,15 @@ export const AppLayout = ({
   canvas,
   showSidebar = true,
   defaultSidebarOpen = false,
+  hasMessages = false,
+  emptyStateTitle = "Start a conversation",
+  emptyStateDescription = "Ask me anything to get started",
   ...props
 }: AppLayoutProps) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(defaultSidebarOpen);
-  const [activePanel, setActivePanel] = useState<"tools" | "reasoning" | "canvas" | null>(
-    null
-  );
+  const [activePanel, setActivePanel] = useState<
+    "tools" | "reasoning" | "canvas" | null
+  >(null);
 
   const hasPanels = !!(tools || reasoning || canvas);
 
@@ -66,8 +72,40 @@ export const AppLayout = ({
       {/* Main Content Area */}
       <div className="relative flex flex-1 overflow-hidden">
         {/* Conversation Area */}
-        <main className="relative flex flex-1 flex-col overflow-hidden">
-          {conversation}
+        <main className="relative flex flex-1 flex-col overflow-hidden px-6 md:px-12 lg:px-16">
+          <div className="mx-auto flex h-full w-full max-w-4xl flex-col">
+            {hasMessages ? (
+              <>
+                {/* Conversation */}
+                <div className="flex-1 overflow-hidden">{conversation}</div>
+
+                {/* Floating Prompt Input at Bottom */}
+                <div className="relative pb-4">
+                  <div className="absolute inset-x-0 -top-8 h-8 bg-linear-to-t from-background to-transparent pointer-events-none" />
+                  <div className="relative rounded-xl border bg-background shadow-lg">
+                    {promptInput}
+                  </div>
+                </div>
+              </>
+            ) : (
+              /* Centered Empty State with Input */
+              <div className="flex flex-1 flex-col items-center justify-center gap-6 pb-20">
+                <div className="text-center space-y-2">
+                  <h2 className="text-2xl font-semibold tracking-tight">
+                    {emptyStateTitle}
+                  </h2>
+                  <p className="text-muted-foreground">
+                    {emptyStateDescription}
+                  </p>
+                </div>
+                <div className="w-full max-w-2xl">
+                  <div className="rounded-xl border bg-background shadow-lg">
+                    {promptInput}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
         </main>
 
         {/* Sidebar with Panels */}
@@ -96,7 +134,9 @@ export const AppLayout = ({
                   )}
                   {reasoning && (
                     <Button
-                      variant={activePanel === "reasoning" ? "secondary" : "ghost"}
+                      variant={
+                        activePanel === "reasoning" ? "secondary" : "ghost"
+                      }
                       className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
                       onClick={() =>
                         setActivePanel(
@@ -113,7 +153,9 @@ export const AppLayout = ({
                       variant={activePanel === "canvas" ? "secondary" : "ghost"}
                       className="flex-1 rounded-none border-b-2 border-transparent data-[state=active]:border-primary"
                       onClick={() =>
-                        setActivePanel(activePanel === "canvas" ? null : "canvas")
+                        setActivePanel(
+                          activePanel === "canvas" ? null : "canvas"
+                        )
                       }
                     >
                       <WorkflowIcon className="mr-2 size-4" />
@@ -149,7 +191,10 @@ export const AppLayout = ({
           <Button
             variant="outline"
             size="icon"
-            className="absolute right-4 top-4 z-10 rounded-full"
+            className={cn(
+              "absolute top-4 z-10 rounded-full transition-all duration-300",
+              isSidebarOpen ? "right-100" : "right-2"
+            )}
             onClick={() => setIsSidebarOpen(!isSidebarOpen)}
           >
             <LayoutPanelLeftIcon
@@ -161,12 +206,6 @@ export const AppLayout = ({
           </Button>
         )}
       </div>
-
-      {/* Fixed Prompt Input Footer */}
-      <footer className="shrink-0 border-t bg-background p-4">
-        {promptInput}
-      </footer>
     </div>
   );
 };
-
