@@ -1,6 +1,8 @@
+import { readFileTool } from "@/ai/tools/file-server";
+import { google } from "@ai-sdk/google";
 import { openai } from "@ai-sdk/openai";
 import { createOpenAICompatible } from "@ai-sdk/openai-compatible";
-import { streamText, convertToModelMessages } from "ai";
+import { streamText, convertToModelMessages, stepCountIs } from "ai";
 import type { UIMessage } from "ai";
 
 export const runtime = "nodejs";
@@ -44,13 +46,25 @@ export async function POST(req: Request) {
       // For local models, use the modelId from the request
       // LM Studio typically uses model names like "llama-3.1-8b-instruct" or similar
       model = openaiCompatible(modelId);
+    } else if (provider === "google") {
+      if (!process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
+        return new Response(
+          "GOOGLE_GENERATIVE_AI_API_KEY is not configured in environment variables",
+          { status: 500 }
+        );
+      }
+      model = google("gemini-2.5-pro");
     } else {
       return new Response(`Unsupported provider: ${provider}`, { status: 400 });
     }
 
     const result = streamText({
       model,
+      system:
+        "You are a helpful employee onboarding assistant. You can read files from the file server to supplement the information you need to answer the user's question. You primarily help developers get started with the company and the technology stack. The read file tool takes in a file path but it returns a static string of the file content so you don't need a filePath parameter.",
       messages: modelMessages,
+      tools: { readFile: readFileTool },
+      stopWhen: stepCountIs(10),
     });
 
     return result.toUIMessageStreamResponse();

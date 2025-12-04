@@ -1,4 +1,4 @@
-export type Provider = "openai" | "local";
+export type Provider = "openai" | "local" | "google";
 
 export interface ModelConfig {
   id: string;
@@ -40,9 +40,16 @@ export const AVAILABLE_MODELS: ModelConfig[] = [
     name: "GPT-OSS 20B",
     provider: "local",
   },
+
+  {
+    id: "gemini-3-pro-preview",
+    name: "Gemini 3 Pro Preview",
+    provider: "google",
+  },
 ];
 
-export const DEFAULT_MODEL: ModelConfig = AVAILABLE_MODELS[0];
+export const DEFAULT_MODEL: ModelConfig =
+  AVAILABLE_MODELS[AVAILABLE_MODELS.length - 1];
 
 export function getModelById(id: string): ModelConfig | undefined {
   return AVAILABLE_MODELS.find((model) => model.id === id);
